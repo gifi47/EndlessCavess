@@ -1,0 +1,15 @@
+# folders
+/[Bb]uild/
+/[Tt]est/
+/[Tt]est_features/
+/[Ww]orld*/
+/[Ll]ib/
+/[Mm]edia/[Tt]est/
+
+# bin files
+*.o
+*.a
+*.dll
+*.so
+*.lib
+*.exe
