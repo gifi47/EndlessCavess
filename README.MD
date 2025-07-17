@@ -2,6 +2,8 @@
 
 This is a voxel game with random generated world written in C++ and OpenGL
 
+![There should be a screenshot](/media/screenshots/screenshot.png)
+
 **Build guide**
 
 1) install dependences: glew, glfw, opengl, soil, glm
