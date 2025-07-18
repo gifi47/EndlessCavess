@@ -17,6 +17,10 @@
 #include <codecvt>
 #include <fstream>
 
+#include <exception>
+#include <typeinfo>
+#include <stdexcept>
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 
@@ -54,7 +58,7 @@ std::ostream& operator<<(std::ostream& os, const glm::ivec3& value){
 }
 
 #ifndef media
-#define media "media\\"
+#define media "media/"
 #endif
 
 //#define CHECK_COLLISION(p1, p2) CheckCollision(chunk, (p1).x - 0.3f + (p2).x, (p1).y - 1.4f + (p2).y, (p1).z - 0.3f + (p2).z, (p1).x + 0.3f + (p2).x, (p1).y + 0.4f + (p2).y, (p1).z + 0.3f + (p2).z)
@@ -62,6 +66,8 @@ std::ostream& operator<<(std::ostream& os, const glm::ivec3& value){
 
 #define CHECK_COLLISION(p1, p2) world.CheckCollision((p1).x - 0.3f + (p2).x, (p1).y - 1.4f + (p2).y, (p1).z - 0.3f + (p2).z, (p1).x + 0.3f + (p2).x, (p1).y + 0.4f + (p2).y, (p1).z + 0.3f + (p2).z)
 #define CHECK_COLLISION1(p1) world.CheckCollision((p1).x - 0.3f, (p1).y - 1.4f, (p1).z - 0.3f, (p1).x + 0.3f, (p1).y + 0.4f, (p1).z + 0.3f)
+
+#ifdef _WIN32
 
 std::wstring utf8_to_wstring(const std::string& utf8_str) {
     int len = MultiByteToWideChar(CP_UTF8, 0, utf8_str.c_str(), -1, NULL, 0);
@@ -86,6 +92,8 @@ std::string toCp(const std::string& utf8_str){
 	//return utf8_to_cp1251(utf8_to_wstring(utf8_str));
 }
 
+#endif //_WIN32
+
 #include "input.h"
 
 void debugCallback(unsigned int source, unsigned int type, unsigned int id,
@@ -96,24 +104,24 @@ void debugCallback(unsigned int source, unsigned int type, unsigned int id,
  //printf("%s:%s[%s](%d): %s\n", source, type, severity, id, message);
 }
 
-struct {
-	Rendering::Shader sObjShaderMVP;// = Rendering::Shader(media "shaders\\rockMVP.vert", media "shaders\\rock.frag");
-	Rendering::Shader circleShader;//(media "shaders\\rockMVP.vert", media "shaders\\rockCircle.frag");
-	Rendering::Shader sObjShaderMVPAlpha;//(media "shaders\\rockMVP.vert", media "shaders\\rockA.frag");
-	Rendering::Shader outlineShader;//(media "shaders\\outline.vert", media "shaders\\outline.frag");
-	Rendering::Shader exp_no_tex_Shader;//(media "shaders\\exp_no_tex.vert", media "shaders\\exp_no_tex.frag");
-	//Rendering::Shader label_shader(media "shaders\\label.vert", media "shaders\\label_uColor.frag");
-	Rendering::Shader label_shader;//(media "shaders\\label.vert", media "shaders\\label_uColor_uHighLightColor.frag");
-	Rendering::Shader wallShader;//(media "shaders\\wall.vert", media "shaders\\wall.frag");
-	Rendering::Shader wallColorShader;//(media "shaders\\wall.vert", media "shaders\\wall_color.frag");
-	//Rendering::Shader wallShader(media "shaders\\wall_displacement_uTime.vert", media "shaders\\wall.frag");
-	Rendering::Shader colorfulShader;//(media "shaders\\colorful.vert", media "shaders\\colorful.frag");
-	Rendering::Shader highlightShader;//(media "shaders\\rockMVP.vert", media "shaders\\color_highlight.frag");
-	//Rendering::Shader displacementShader(media "shaders\\displacement.vert", media "shaders\\color_highlight.frag");
-	Rendering::Shader displacementShader;//(media "shaders\\displacement_uTime.vert", media "shaders\\color_highlight.frag");
-	Rendering::Shader dotProductTestShader;//(media "shaders\\posOut.vert", media "shaders\\dotProductTest.frag");
-	Rendering::Shader wallVertColorShader;//(media "shaders\\wallXYRGB.vert", media "shaders\\wall_aColor.frag");
-	Rendering::Shader wallCircleShader;//(media "shaders\\wallTex.vert", media "shaders\\wallTex.frag");
+struct ST_STRUCT{
+	Rendering::Shader sObjShaderMVP;// = Rendering::Shader(media "shaders/rockMVP.vert", media "shaders/rock.frag");
+	Rendering::Shader circleShader;//(media "shaders/rockMVP.vert", media "shaders/rockCircle.frag");
+	Rendering::Shader sObjShaderMVPAlpha;//(media "shaders/rockMVP.vert", media "shaders/rockA.frag");
+	Rendering::Shader outlineShader;//(media "shaders/outline.vert", media "shaders/outline.frag");
+	Rendering::Shader exp_no_tex_Shader;//(media "shaders/exp_no_tex.vert", media "shaders/exp_no_tex.frag");
+	//Rendering::Shader label_shader(media "shaders/label.vert", media "shaders/label_uColor.frag");
+	Rendering::Shader label_shader;//(media "shaders/label.vert", media "shaders/label_uColor_uHighLightColor.frag");
+	Rendering::Shader wallShader;//(media "shaders/wall.vert", media "shaders/wall.frag");
+	Rendering::Shader wallColorShader;//(media "shaders/wall.vert", media "shaders/wall_color.frag");
+	//Rendering::Shader wallShader(media "shaders/wall_displacement_uTime.vert", media "shaders/wall.frag");
+	Rendering::Shader colorfulShader;//(media "shaders/colorful.vert", media "shaders/colorful.frag");
+	Rendering::Shader highlightShader;//(media "shaders/rockMVP.vert", media "shaders/color_highlight.frag");
+	//Rendering::Shader displacementShader(media "shaders/displacement.vert", media "shaders/color_highlight.frag");
+	Rendering::Shader displacementShader;//(media "shaders/displacement_uTime.vert", media "shaders/color_highlight.frag");
+	Rendering::Shader dotProductTestShader;//(media "shaders/posOut.vert", media "shaders/dotProductTest.frag");
+	Rendering::Shader wallVertColorShader;//(media "shaders/wallXYRGB.vert", media "shaders/wall_aColor.frag");
+	Rendering::Shader wallCircleShader;//(media "shaders/wallTex.vert", media "shaders/wallTex.frag");
 	Rendering::Shader wallRBShader;
 	Rendering::Shader shaderXYZUV;
 	Rendering::Shader shaderXYZUV_Transparent;
@@ -121,37 +129,37 @@ struct {
 	Rendering::Shader shaderXYZUVS;
 	Rendering::Shader shaderRayDebug;
 
-	Rendering::Texture blackTexF;// = Rendering::Texture(media "textures\\black_f.png", SOIL_LOAD_RGB);
-	Rendering::Texture whiteTexF;// = Rendering::Texture(media "textures\\white_f.png", SOIL_LOAD_RGB);
-	Rendering::Texture blackTex;// = Rendering::Texture(media "textures\\black.png", SOIL_LOAD_RGB); // EDITED FROM black.png TO black_color.png
-	Rendering::Texture whiteTex;// = Rendering::Texture(media "textures\\white.png", SOIL_LOAD_RGB);
-	Rendering::Texture saveTex;// = Rendering::Texture(media "textures\\save.png", SOIL_LOAD_RGB);
-	Rendering::Texture loadTex;// = Rendering::Texture(media "textures\\load.png", SOIL_LOAD_RGB);
-	Rendering::Texture reloadTex;// = Rendering::Texture(media "textures\\reload.png", SOIL_LOAD_RGB);
-	Rendering::Texture captionWhiteMoveTex;// = Rendering::Texture(media "textures\\captionWhiteMove.png", SOIL_LOAD_RGBA);
-	Rendering::Texture captionBlackMoveTex;// = Rendering::Texture(media "textures\\captionBlackMove.png", SOIL_LOAD_RGBA);
-	Rendering::Texture captionWhiteWinsTex;// = Rendering::Texture(media "textures\\captionWhiteWins.png", SOIL_LOAD_RGBA);
-	Rendering::Texture captionBlackWinsTex;// = Rendering::Texture(media "textures\\captionBlackWins.png", SOIL_LOAD_RGBA);
-	Rendering::Texture blackHighlightedTex;// = Rendering::Texture(media "textures\\black_highlighted.png", SOIL_LOAD_RGB);
-	Rendering::Texture whiteHighlightedTex;// = Rendering::Texture(media "textures\\white_highlighted.png", SOIL_LOAD_RGB);
-	Rendering::Texture findPath;// = Rendering::Texture(media "textures\\findPath.png", SOIL_LOAD_RGB);
-	Rendering::Texture deleteVert;// = Rendering::Texture(media "textures\\deleteSelected.png", SOIL_LOAD_RGB);
-	Rendering::Texture paintVertsTex;//= Rendering::Texture(media "textures\\paintVerts.png", SOIL_LOAD_RGB);
-	Rendering::Texture paintLinksTex;// = Rendering::Texture(media "textures\\paintLinks.png", SOIL_LOAD_RGB);
-	Rendering::Texture paintAllTex;// = Rendering::Texture(media "textures\\paintAll.png", SOIL_LOAD_RGB);
-	Rendering::Texture clearTex;// = Rendering::Texture(media "textures\\clearPaint.png", SOIL_LOAD_RGB);
-	Rendering::Texture captionMouse;// = Rendering::Texture(media "textures\\captionMouse.png", SOIL_LOAD_RGBA);
-	Rendering::Texture emptyTex;// = Rendering::Texture(media "textures\\empty.png", SOIL_LOAD_RGBA);
-	Rendering::Texture textTex;// = Rendering::Texture(media "textures\\symbols.png", SOIL_LOAD_RGBA);
-	//Rendering::Texture textTex(media "textures\\sussyText.png", SOIL_LOAD_RGBA);
-	Rendering::Texture digit_tex;// = Rendering::Texture(media "textures\\digits2.png", SOIL_LOAD_RGBA);
+	Rendering::Texture blackTexF;// = Rendering::Texture(media "textures/black_f.png", SOIL_LOAD_RGB);
+	Rendering::Texture whiteTexF;// = Rendering::Texture(media "textures/white_f.png", SOIL_LOAD_RGB);
+	Rendering::Texture blackTex;// = Rendering::Texture(media "textures/black.png", SOIL_LOAD_RGB); // EDITED FROM black.png TO black_color.png
+	Rendering::Texture whiteTex;// = Rendering::Texture(media "textures/white.png", SOIL_LOAD_RGB);
+	Rendering::Texture saveTex;// = Rendering::Texture(media "textures/save.png", SOIL_LOAD_RGB);
+	Rendering::Texture loadTex;// = Rendering::Texture(media "textures/load.png", SOIL_LOAD_RGB);
+	Rendering::Texture reloadTex;// = Rendering::Texture(media "textures/reload.png", SOIL_LOAD_RGB);
+	Rendering::Texture captionWhiteMoveTex;// = Rendering::Texture(media "textures/captionWhiteMove.png", SOIL_LOAD_RGBA);
+	Rendering::Texture captionBlackMoveTex;// = Rendering::Texture(media "textures/captionBlackMove.png", SOIL_LOAD_RGBA);
+	Rendering::Texture captionWhiteWinsTex;// = Rendering::Texture(media "textures/captionWhiteWins.png", SOIL_LOAD_RGBA);
+	Rendering::Texture captionBlackWinsTex;// = Rendering::Texture(media "textures/captionBlackWins.png", SOIL_LOAD_RGBA);
+	Rendering::Texture blackHighlightedTex;// = Rendering::Texture(media "textures/black_highlighted.png", SOIL_LOAD_RGB);
+	Rendering::Texture whiteHighlightedTex;// = Rendering::Texture(media "textures/white_highlighted.png", SOIL_LOAD_RGB);
+	Rendering::Texture findPath;// = Rendering::Texture(media "textures/findPath.png", SOIL_LOAD_RGB);
+	Rendering::Texture deleteVert;// = Rendering::Texture(media "textures/deleteSelected.png", SOIL_LOAD_RGB);
+	Rendering::Texture paintVertsTex;//= Rendering::Texture(media "textures/paintVerts.png", SOIL_LOAD_RGB);
+	Rendering::Texture paintLinksTex;// = Rendering::Texture(media "textures/paintLinks.png", SOIL_LOAD_RGB);
+	Rendering::Texture paintAllTex;// = Rendering::Texture(media "textures/paintAll.png", SOIL_LOAD_RGB);
+	Rendering::Texture clearTex;// = Rendering::Texture(media "textures/clearPaint.png", SOIL_LOAD_RGB);
+	Rendering::Texture captionMouse;// = Rendering::Texture(media "textures/captionMouse.png", SOIL_LOAD_RGBA);
+	Rendering::Texture emptyTex;// = Rendering::Texture(media "textures/empty.png", SOIL_LOAD_RGBA);
+	Rendering::Texture textTex;// = Rendering::Texture(media "textures/symbols.png", SOIL_LOAD_RGBA);
+	//Rendering::Texture textTex(media "textures/sussyText.png", SOIL_LOAD_RGBA);
+	Rendering::Texture digit_tex;// = Rendering::Texture(media "textures/digits2.png", SOIL_LOAD_RGBA);
 
-	Rendering::Texture taskTableTex;// = Rendering::Texture(media "textures\\taskTable.png", SOIL_LOAD_RGBA);
-	Rendering::Texture taskFlowTex;// = Rendering::Texture(media "textures\\taskFlow.png", SOIL_LOAD_RGBA);
-	Rendering::Texture tableMaxTex;// = Rendering::Texture(media "textures\\tableMax.png", SOIL_LOAD_RGBA);
+	Rendering::Texture taskTableTex;// = Rendering::Texture(media "textures/taskTable.png", SOIL_LOAD_RGBA);
+	Rendering::Texture taskFlowTex;// = Rendering::Texture(media "textures/taskFlow.png", SOIL_LOAD_RGBA);
+	Rendering::Texture tableMaxTex;// = Rendering::Texture(media "textures/tableMax.png", SOIL_LOAD_RGBA);
 	Rendering::Texture tableMinTex;
 
-	Rendering::Texture nextTex;// = Rendering::Texture(media "textures\\tableMax.png", SOIL_LOAD_RGBA);
+	Rendering::Texture nextTex;// = Rendering::Texture(media "textures/tableMax.png", SOIL_LOAD_RGBA);
 	Rendering::Texture prevTex;
 
 	Rendering::Texture blockAtlas;
@@ -181,7 +189,7 @@ struct {
 	glm::mat3 rotUp;
 
 	Camera camera;
-} ST;
+};
 
 std::string f_to_s(float value, int precision){
 	int q = std::floor(value);
@@ -240,6 +248,8 @@ void main_process(){
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
+	ST_STRUCT ST;
+
 	ST.ortho_view = glm::lookAt(
 		glm::vec3(0, 0, 3),
 		glm::vec3(0, 0, 2),
@@ -294,71 +304,71 @@ void main_process(){
 	};
 
 	// Shaders
-	ST.sObjShaderMVP = Rendering::Shader(media "shaders\\rockMVP.vert", media "shaders\\rock.frag");
-	ST.circleShader = Rendering::Shader(media "shaders\\rockMVP.vert", media "shaders\\rockCircle.frag");
-	ST.sObjShaderMVPAlpha = Rendering::Shader(media "shaders\\rockMVP.vert", media "shaders\\rockA.frag");
-	ST.outlineShader = Rendering::Shader(media "shaders\\outline.vert", media "shaders\\outline.frag");
-	ST.exp_no_tex_Shader = Rendering::Shader(media "shaders\\exp_no_tex.vert", media "shaders\\exp_no_tex.frag");
-	//Rendering::Shader label_shader(media "shaders\\label.vert", media "shaders\\label_uColor.frag");
-	ST.label_shader = Rendering::Shader(media "shaders\\label.vert", media "shaders\\label_uColor_uHighLightColor.frag");
-	ST.wallShader = Rendering::Shader(media "shaders\\wall.vert", media "shaders\\wall.frag");
-	ST.wallColorShader = Rendering::Shader(media "shaders\\wall.vert", media "shaders\\wall_color.frag");
-	//Rendering::Shader wallShader(media "shaders\\wall_displacement_uTime.vert", media "shaders\\wall.frag");
-	ST.colorfulShader = Rendering::Shader(media "shaders\\colorful.vert", media "shaders\\colorful.frag");
-	ST.highlightShader = Rendering::Shader(media "shaders\\rockMVP.vert", media "shaders\\color_highlight.frag");
-	//Rendering::Shader displacementShader(media "shaders\\displacement.vert", media "shaders\\color_highlight.frag");
-	ST.displacementShader = Rendering::Shader(media "shaders\\displacement_uTime.vert", media "shaders\\color_highlight.frag");
-	ST.dotProductTestShader = Rendering::Shader(media "shaders\\posOut.vert", media "shaders\\dotProductTest.frag");
-	ST.wallVertColorShader = Rendering::Shader(media "shaders\\wallXYRGB.vert", media "shaders\\wall_aColor.frag");
-	ST.wallCircleShader = Rendering::Shader(media "shaders\\wallTex.vert", media "shaders\\wallTex.frag");
-	ST.wallRBShader = Rendering::Shader(media "shaders\\wallRB.vert", media "shaders\\wallRB.frag");
-	//Rendering::Shader editableLabelShader(media "shaders\\label.vert", media "shaders\\color_highlight.frag")
-	ST.shaderXYZUV = Rendering::Shader(media "shaders\\rockXYZUV.vert", media "shaders\\rock.frag");
-	ST.shaderXYZUV_Transparent = Rendering::Shader(media "shaders\\rockXYZUV.vert", media "shaders\\rockTransparent.frag");
-	ST.shaderRayDebug = Rendering::Shader(media "shaders\\debug_ray.vert", media "shaders\\debug_ray.frag");
-	ST.shaderXYZUV_TransparentStripe = Rendering::Shader(media "shaders\\rockXYZUV.vert", media "shaders\\rockTransparentStripe.frag");
-	ST.shaderXYZUVS = Rendering::Shader(media "shaders\\rockXYZUVS.vert", media "shaders\\rockShadow.frag");
+	ST.sObjShaderMVP = Rendering::Shader(media "shaders/rockMVP.vert", media "shaders/rock.frag");
+	ST.circleShader = Rendering::Shader(media "shaders/rockMVP.vert", media "shaders/rockCircle.frag");
+	ST.sObjShaderMVPAlpha = Rendering::Shader(media "shaders/rockMVP.vert", media "shaders/rockA.frag");
+	ST.outlineShader = Rendering::Shader(media "shaders/outline.vert", media "shaders/outline.frag");
+	ST.exp_no_tex_Shader = Rendering::Shader(media "shaders/exp_no_tex.vert", media "shaders/exp_no_tex.frag");
+	//Rendering::Shader label_shader(media "shaders/label.vert", media "shaders/label_uColor.frag");
+	ST.label_shader = Rendering::Shader(media "shaders/label.vert", media "shaders/label_uColor_uHighLightColor.frag");
+	ST.wallShader = Rendering::Shader(media "shaders/wall.vert", media "shaders/wall.frag");
+	ST.wallColorShader = Rendering::Shader(media "shaders/wall.vert", media "shaders/wall_color.frag");
+	//Rendering::Shader wallShader(media "shaders/wall_displacement_uTime.vert", media "shaders/wall.frag");
+	ST.colorfulShader = Rendering::Shader(media "shaders/colorful.vert", media "shaders/colorful.frag");
+	ST.highlightShader = Rendering::Shader(media "shaders/rockMVP.vert", media "shaders/color_highlight.frag");
+	//Rendering::Shader displacementShader(media "shaders/displacement.vert", media "shaders/color_highlight.frag");
+	ST.displacementShader = Rendering::Shader(media "shaders/displacement_uTime.vert", media "shaders/color_highlight.frag");
+	ST.dotProductTestShader = Rendering::Shader(media "shaders/posOut.vert", media "shaders/dotProductTest.frag");
+	ST.wallVertColorShader = Rendering::Shader(media "shaders/wallXYRGB.vert", media "shaders/wall_aColor.frag");
+	ST.wallCircleShader = Rendering::Shader(media "shaders/wallTex.vert", media "shaders/wallTex.frag");
+	ST.wallRBShader = Rendering::Shader(media "shaders/wallRB.vert", media "shaders/wallRB.frag");
+	//Rendering::Shader editableLabelShader(media "shaders/label.vert", media "shaders/color_highlight.frag")
+	ST.shaderXYZUV = Rendering::Shader(media "shaders/rockXYZUV.vert", media "shaders/rock.frag");
+	ST.shaderXYZUV_Transparent = Rendering::Shader(media "shaders/rockXYZUV.vert", media "shaders/rockTransparent.frag");
+	ST.shaderRayDebug = Rendering::Shader(media "shaders/debug_ray.vert", media "shaders/debug_ray.frag");
+	ST.shaderXYZUV_TransparentStripe = Rendering::Shader(media "shaders/rockXYZUV.vert", media "shaders/rockTransparentStripe.frag");
+	ST.shaderXYZUVS = Rendering::Shader(media "shaders/rockXYZUVS.vert", media "shaders/rockShadow.frag");
 
 	// Textures
-	ST.blackTexF = Rendering::Texture(media "textures\\black_f.png", SOIL_LOAD_RGB);
-	ST.whiteTexF = Rendering::Texture(media "textures\\white_f.png", SOIL_LOAD_RGB);
-	ST.blackTex = Rendering::Texture(media "textures\\black.png", SOIL_LOAD_RGB); // EDITED FROM black.png TO black_color.png
-	ST.whiteTex = Rendering::Texture(media "textures\\white.png", SOIL_LOAD_RGB);
-	ST.saveTex = Rendering::Texture(media "textures\\save.png", SOIL_LOAD_RGB);
-	ST.loadTex = Rendering::Texture(media "textures\\load.png", SOIL_LOAD_RGB);
-	ST.reloadTex = Rendering::Texture(media "textures\\reload.png", SOIL_LOAD_RGB);
-	ST.captionWhiteMoveTex = Rendering::Texture(media "textures\\captionWhiteMove.png", SOIL_LOAD_RGBA);
-	ST.captionBlackMoveTex = Rendering::Texture(media "textures\\captionBlackMove.png", SOIL_LOAD_RGBA);
-	ST.captionWhiteWinsTex = Rendering::Texture(media "textures\\captionWhiteWins.png", SOIL_LOAD_RGBA);
-	ST.captionBlackWinsTex = Rendering::Texture(media "textures\\captionBlackWins.png", SOIL_LOAD_RGBA);
-	ST.blackHighlightedTex = Rendering::Texture(media "textures\\black_highlighted.png", SOIL_LOAD_RGB);
-	ST.whiteHighlightedTex = Rendering::Texture(media "textures\\white_highlighted.png", SOIL_LOAD_RGB);
-	ST.findPath = Rendering::Texture(media "textures\\findPath.png", SOIL_LOAD_RGB);
-	ST.deleteVert = Rendering::Texture(media "textures\\deleteSelected.png", SOIL_LOAD_RGB);
-	ST.paintVertsTex = Rendering::Texture(media "textures\\paintVerts.png", SOIL_LOAD_RGB);
-	ST.paintLinksTex = Rendering::Texture(media "textures\\paintLinks.png", SOIL_LOAD_RGB);
-	ST.paintAllTex = Rendering::Texture(media "textures\\paintAll.png", SOIL_LOAD_RGB);
-	ST.clearTex = Rendering::Texture(media "textures\\clearPaint.png", SOIL_LOAD_RGB);
-	ST.captionMouse = Rendering::Texture(media "textures\\captionMouse.png", SOIL_LOAD_RGBA);
-	ST.emptyTex = Rendering::Texture(media "textures\\empty.png", SOIL_LOAD_RGBA);
-	ST.textTex = Rendering::Texture(media "textures\\symbols.png", SOIL_LOAD_RGBA);
-	//Rendering::Texture textTex(media "textures\\sussyText.png", SOIL_LOAD_RGBA);
-	ST.digit_tex = Rendering::Texture(media "textures\\digits2.png", SOIL_LOAD_RGBA);
+	ST.blackTexF = Rendering::Texture(media "textures/black_f.png", SOIL_LOAD_RGB);
+	ST.whiteTexF = Rendering::Texture(media "textures/white_f.png", SOIL_LOAD_RGB);
+	ST.blackTex = Rendering::Texture(media "textures/black.png", SOIL_LOAD_RGB); // EDITED FROM black.png TO black_color.png
+	ST.whiteTex = Rendering::Texture(media "textures/white.png", SOIL_LOAD_RGB);
+	ST.saveTex = Rendering::Texture(media "textures/save.png", SOIL_LOAD_RGB);
+	ST.loadTex = Rendering::Texture(media "textures/load.png", SOIL_LOAD_RGB);
+	ST.reloadTex = Rendering::Texture(media "textures/reload.png", SOIL_LOAD_RGB);
+	ST.captionWhiteMoveTex = Rendering::Texture(media "textures/captionWhiteMove.png", SOIL_LOAD_RGBA);
+	ST.captionBlackMoveTex = Rendering::Texture(media "textures/captionBlackMove.png", SOIL_LOAD_RGBA);
+	ST.captionWhiteWinsTex = Rendering::Texture(media "textures/captionWhiteWins.png", SOIL_LOAD_RGBA);
+	ST.captionBlackWinsTex = Rendering::Texture(media "textures/captionBlackWins.png", SOIL_LOAD_RGBA);
+	ST.blackHighlightedTex = Rendering::Texture(media "textures/black_highlighted.png", SOIL_LOAD_RGB);
+	ST.whiteHighlightedTex = Rendering::Texture(media "textures/white_highlighted.png", SOIL_LOAD_RGB);
+	ST.findPath = Rendering::Texture(media "textures/findPath.png", SOIL_LOAD_RGB);
+	ST.deleteVert = Rendering::Texture(media "textures/deleteSelected.png", SOIL_LOAD_RGB);
+	ST.paintVertsTex = Rendering::Texture(media "textures/paintVerts.png", SOIL_LOAD_RGB);
+	ST.paintLinksTex = Rendering::Texture(media "textures/paintLinks.png", SOIL_LOAD_RGB);
+	ST.paintAllTex = Rendering::Texture(media "textures/paintAll.png", SOIL_LOAD_RGB);
+	ST.clearTex = Rendering::Texture(media "textures/clearPaint.png", SOIL_LOAD_RGB);
+	ST.captionMouse = Rendering::Texture(media "textures/captionMouse.png", SOIL_LOAD_RGBA);
+	ST.emptyTex = Rendering::Texture(media "textures/empty.png", SOIL_LOAD_RGBA);
+	ST.textTex = Rendering::Texture(media "textures/symbols.png", SOIL_LOAD_RGBA);
+	//Rendering::Texture textTex(media "textures/sussyText.png", SOIL_LOAD_RGBA);
+	ST.digit_tex = Rendering::Texture(media "textures/digits2.png", SOIL_LOAD_RGBA);
 
-	ST.taskTableTex = Rendering::Texture(media "textures\\taskTable.png", SOIL_LOAD_RGBA);
-	ST.taskFlowTex = Rendering::Texture(media "textures\\taskFlow.png", SOIL_LOAD_RGBA);
-	ST.tableMaxTex = Rendering::Texture(media "textures\\tableMax.png", SOIL_LOAD_RGBA);
-	ST.tableMinTex = Rendering::Texture(media "textures\\tableMin.png", SOIL_LOAD_RGBA);
+	ST.taskTableTex = Rendering::Texture(media "textures/taskTable.png", SOIL_LOAD_RGBA);
+	ST.taskFlowTex = Rendering::Texture(media "textures/taskFlow.png", SOIL_LOAD_RGBA);
+	ST.tableMaxTex = Rendering::Texture(media "textures/tableMax.png", SOIL_LOAD_RGBA);
+	ST.tableMinTex = Rendering::Texture(media "textures/tableMin.png", SOIL_LOAD_RGBA);
 
-	ST.nextTex = Rendering::Texture(media "textures\\next.png", SOIL_LOAD_RGBA);
-	ST.prevTex = Rendering::Texture(media "textures\\prev.png", SOIL_LOAD_RGBA);
+	ST.nextTex = Rendering::Texture(media "textures/next.png", SOIL_LOAD_RGBA);
+	ST.prevTex = Rendering::Texture(media "textures/prev.png", SOIL_LOAD_RGBA);
 
 #ifdef BLOCK_STORY
-	//ST.blockAtlas = Rendering::Texture(media "textures\\sus_tex.png", SOIL_LOAD_RGB);
-	ST.blockAtlas = Rendering::Texture(media "textures\\blockStoryAtlas.png", SOIL_LOAD_RGBA);
+	//ST.blockAtlas = Rendering::Texture(media "textures/sus_tex.png", SOIL_LOAD_RGB);
+	ST.blockAtlas = Rendering::Texture(media "textures/blockStoryAtlas.png", SOIL_LOAD_RGBA);
 #else
-	//ST.blockAtlas = Rendering::Texture(media "textures\\sus_tex.png", SOIL_LOAD_RGB);
-	ST.blockAtlas = Rendering::Texture(media "textures\\minecraftAtlas.png", SOIL_LOAD_RGBA);
+	//ST.blockAtlas = Rendering::Texture(media "textures/sus_tex.png", SOIL_LOAD_RGB);
+	ST.blockAtlas = Rendering::Texture(media "textures/minecraftAtlas.png", SOIL_LOAD_RGBA);
 #endif
 
 	// SET FILTER MODE FOR BLOCKS TEXTURE ATLAS
@@ -565,7 +575,7 @@ void main_process(){
 		std::cout <<  chunkObj.indexes[i] << "\n";
 	}*/
 
-	tst::SimpleObj tmp_figure(media "models\\bishop.obj", ST.sObjShaderMVP, ST.blackTexF, 5);
+	tst::SimpleObj tmp_figure(media "models/bishop.obj", ST.sObjShaderMVP, ST.blackTexF, 5);
 	
 	//ST.cameraPos = glm::vec3(0, 17, 0);
 
@@ -1068,11 +1078,21 @@ void main_process(){
 	ST.captionBlackMoveTex.Dispose();
 	ST.captionBlackWinsTex.Dispose();
 */
-	//DisposeAll();
+	DisposeAll();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 
 int main(){
-    main_process();
+	std::cout << "HELLO WORLD!";
+	//try{
+		main_process();
+	/*}catch (...){
+	    std::cout << "An exception occurred. Exception Nr. " << '\n';
+	    std::exception_ptr p = std::current_exception();
+        std::clog << "exception: " <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+	}
+*/
+    std::cout << "END!";
+    return 0;
 }

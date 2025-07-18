@@ -1,5 +1,5 @@
-#ifndef IDISPOSABLE_H
-#define IDISPOSABLE_H
+#ifndef INTERFACE_I_DISPOSABLE_H
+#define INTERFACE_I_DISPOSABLE_H
 
 #ifdef DEBUG
 #include <iostream>
@@ -12,73 +12,18 @@ extern int _____k;
 #define NEW_NAME std::to_string(_____k++)
 #endif //DEBUG
 
-class IDisposable {
-protected:
-    int* ref_count;
+void DisposeAll();
 
-    void release() {
+class IDisposable{
+	public:
+		IDisposable();
+		IDisposable(bool add_to_disposable_list);
+		void Dispose();
+		void Dispose(bool remove_from_disposable_list);
 
-        #ifdef DEBUG
-        std::cout << "Release obj: " << THIS_NAME << " ref_count->"<< (ref_count ? (*ref_count) : 0) << "\n";
-        #endif
+	protected:
+		virtual void OnDispose() {}
 
-        if (ref_count && --(*ref_count) == 0) {
-            delete ref_count;
-            OnDispose();
-        }
-    }
-
-    virtual void OnDispose() = 0;
-
-public:
-    IDisposable() : ref_count(new int(1)) {
-        #ifdef DEBUG
-            std::cout << "Def Constructor\n";
-        #endif
-    }
-
-    IDisposable(const IDisposable& other) : ref_count(other.ref_count) {
-        ++(*ref_count);
-        #ifdef DEBUG
-            std::cout << "Copy Constructor " << (*ref_count) << "\n";
-        #endif
-    }
-
-    IDisposable(IDisposable&& other) noexcept 
-        : ref_count(other.ref_count) {
-        other.ref_count = nullptr;
-        #ifdef DEBUG
-            std::cout << "Move Constructor " << (*ref_count) << "\n";
-        #endif
-    }
-
-    IDisposable& operator=(const IDisposable& other) {
-        if (this != &other) {
-            release();
-            ref_count = other.ref_count;
-            ++(*ref_count);
-        }
-        #ifdef DEBUG
-            std::cout << "Copy Operator= " << (*ref_count) << "\n";
-        #endif
-        return *this;
-    }
-
-    IDisposable& operator=(IDisposable&& other) noexcept {
-        if (this != &other) {
-            release();
-            ref_count = other.ref_count;
-            other.ref_count = nullptr;
-        }
-        #ifdef DEBUG
-            std::cout << "Move Operator= " << (*ref_count) << "\n";
-        #endif
-        return *this;
-    }
-
-    ~IDisposable() {
-        release();
-    }
 };
 
-#endif
+#endif //INTERFACE_I_DISPOSABLE_H

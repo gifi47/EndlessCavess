@@ -11,7 +11,7 @@ set COMPILER=g++
 set LINKER=g++
 set MEDIA_DEFINE=-Dmedia="\"!MEDIA_DIR:\=/!/\""
 set COMPILER_FLAGS=-c -I%SOURCE_DIR% %MEDIA_DEFINE%
-set LINKER_FLAGS=-lMyGraphics2 -lsoil -lopengl32 -lglew32 -lglfw3
+set LINKER_FLAGS=-L%LIB_DIR% -lMyGraphics2 -lsoil -lopengl32 -lglew32 -lglfw3
 
 :: Check media folder
 if not exist "%MEDIA_DIR%" (

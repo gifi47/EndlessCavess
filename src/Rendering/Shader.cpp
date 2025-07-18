@@ -1,9 +1,16 @@
 #include "Shader.h"
 
 #ifdef DEBUG
+#include <string>
 std::map<long long, std::string> names;
-int _____k = 0;
+int _____k = 1;
 #endif //DEBUG
+
+Rendering::Shader::Shader() {
+#ifdef DEBUG
+    THIS_NAME = "Shader " + NEW_NAME;
+#endif
+}
 
 Rendering::Shader::Shader(const std::string& name) {
 #ifdef DEBUG
@@ -86,7 +93,7 @@ void Rendering::Shader::Initialize(const std::string& vertexShaderFilePath, cons
     delete[] fragmentShaderSourceCode;
 }
 
-void Rendering::Shader::OnDispose(){
+void Rendering::Shader::OnDispose() {
 #ifdef DEBUG
         std::cout << "Disposed Shader Program id:" << this->programId << " " << THIS_NAME << "\n";
 #endif
