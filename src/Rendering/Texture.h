@@ -11,7 +11,7 @@
 namespace Rendering {
 	class Texture : IDisposable {
 	public:
-		Texture() = default;
+		Texture();
 		Texture(const std::string& filePath, int imageType);
 		Texture(const Texture& texture);
 		Texture(Texture&& texture);
@@ -25,7 +25,7 @@ namespace Rendering {
 		
 		GLuint textureId{};
 	protected:
-		void OnDispose() override;
+		void OnDispose() final override;
 	};
 }
 

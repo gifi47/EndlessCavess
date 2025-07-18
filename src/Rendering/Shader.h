@@ -1,7 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -13,7 +13,7 @@
 namespace Rendering {
 	class Shader : IDisposable {
 	public:
-		Shader() = default;
+		Shader();
 		Shader(const std::string& name);
 		Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
 		Shader(const Shader& shader);
@@ -31,7 +31,7 @@ namespace Rendering {
 		static void CheckProgramErrors(const GLuint& programId);
 
 	protected:
-		void OnDispose() override;
+		void OnDispose() final override;
 	};
 
 }

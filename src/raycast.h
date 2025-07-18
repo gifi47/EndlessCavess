@@ -75,7 +75,7 @@ RaycastResult Raycast(const glm::vec3& rayOrigin, const glm::vec3& rayDirection,
             return result;
         }
 
-        traveledDistance += abs(rayDirection[axis]);
+        traveledDistance += glm::abs(rayDirection[axis]);
     }
 
     return { false, glm::ivec3(0), glm::ivec3(0) };
@@ -150,7 +150,7 @@ RaycastResult Raycast(const glm::vec3& rayOrigin, const glm::vec3& rayDirection,
             return result;
         }
 
-        traveledDistance += abs(rayDirection[axis]);
+        traveledDistance += glm::abs(rayDirection[axis]);
     }
 
     return { false, glm::ivec3(0), glm::ivec3(0) };

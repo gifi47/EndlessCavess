@@ -2,7 +2,15 @@
 
 #ifdef DEBUG
 #include <iostream>
+#include <string>
 #endif
+
+Rendering::Texture::Texture(){
+#ifdef DEBUG
+	THIS_NAME = "Texture " + NEW_NAME;
+	std::cout << "New Texture obj:" << THIS_NAME << "\n";
+#endif
+}
 
 Rendering::Texture::Texture(const std::string& filePath, int imageType){
 #ifdef DEBUG
@@ -72,7 +80,7 @@ void Rendering::Texture::Initialize(const std::string& filePath, int imageType){
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Rendering::Texture::OnDispose(){
+void Rendering::Texture::OnDispose() {
 #ifdef DEBUG
 	std::cout << "Disposed Texture id: " << this->textureId << " obj:" << THIS_NAME << "\n";
 #endif
