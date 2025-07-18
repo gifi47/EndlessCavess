@@ -29,6 +29,8 @@ void AddCube(std::vector<float>& vertices, int block, int x, int y, int z, float
 
 #define TO_LOCAL_BLOCK_COORD(block_coord, chunk_coord, coord_max) ( (block_coord) - (coord_max) * (chunk_coord) )
 
+class ChunkStorage;
+
 class Chunk{
 public:
 	int x{0};
@@ -36,7 +38,7 @@ public:
 	int z{0};
 	int blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
-	bool isRendering = true;
+	bool isRendering = false;
 
 	ObjectXYZUVS mesh;
 	bool isDirty = true;
@@ -292,7 +294,7 @@ public:
 	}
 
 	// TODO: add support for checking adjacent blocks from nearby loaded chunks! 
-	/*std::vector<float> CreateMesh3() const{
+	/*std::vector<float> CreateMesh3(ChunkStorage& chunks) const{
 		std::vector<float> vertices(0);
 		float shadow[4] = {0.05f, 0.05f, 0.05f, 0.05f};
 
@@ -303,168 +305,171 @@ public:
 					if (block != 0) {
 						if (blocks[_x-1][_y][_z] == 0){
 							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-								if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
-								if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
-								if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-								if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
+							if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
+							if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
+							if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
+							if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
 
-								if (blocks[_x - 1][_y + 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (blocks[_x - 1][_y - 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (blocks[_x - 1][_y][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (blocks[_x - 1][_y][_z - 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
+							if (blocks[_x - 1][_y + 1][_z] != 0) {
+								shadow[0] += 0.1f;
+								shadow[1] += 0.1f;
+							}
+							if (blocks[_x - 1][_y - 1][_z] != 0) {
+								shadow[2] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x - 1][_y][_z + 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x - 1][_y][_z - 1] != 0) {
+								shadow[1] += 0.1f;
+								shadow[2] += 0.1f;
 							}
 							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_B, shadow);
 						}
-						if (!isXu || blocks[_x+1][_y][_z] == 0){
+						if (blocks[_x+1][_y][_z] == 0){
 							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isXu){
-								if (isYu && isZl && blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isZu && blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isZu && blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isZl && blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
+							if (blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
+							if (blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
+							if (blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
+							if (blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
 
-								if (isYu && blocks[_x + 1][_y + 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x + 1][_y - 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isZu && blocks[_x + 1][_y][_z + 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-								if (isZl && blocks[_x + 1][_y][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
+							if (blocks[_x + 1][_y + 1][_z] != 0) {
+								shadow[0] += 0.1f;
+								shadow[1] += 0.1f;
+							}
+							if (blocks[_x + 1][_y - 1][_z] != 0) {
+								shadow[2] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x + 1][_y][_z + 1] != 0) {
+								shadow[1] += 0.1f;
+								shadow[2] += 0.1f;
+							}
+							if (blocks[_x + 1][_y][_z - 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[3] += 0.1f;
 							}
 							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_F, shadow);
 						}
-						if (!isYl || blocks[_x][_y-1][_z] == 0){
+						if (blocks[_x][_y-1][_z] == 0){
 							shadow[0] = 0.15f; shadow[1] = 0.15f; shadow[2] = 0.15f; shadow[3] = 0.15f;
-							if (isYl){
-								if (isXl && isZu && blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[0] += 0.1f;
-								if (isXl && isZl && blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[1] += 0.1f;
-								if (isXu && isZl && blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-								if (isXu && isZu && blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
+							if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[0] += 0.1f;
+							if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[1] += 0.1f;
+							if (blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
+							if (blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
 
-								if (isXu && blocks[_x + 1][_y - 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y - 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isZu && blocks[_x][_y - 1][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isZl && blocks[_x][_y - 1][_z - 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
+							if (blocks[_x + 1][_y - 1][_z] != 0) {
+								shadow[2] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x - 1][_y - 1][_z] != 0) {
+								shadow[0] += 0.1f;
+								shadow[1] += 0.1f;
+							}
+							if (blocks[_x][_y - 1][_z + 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x][_y - 1][_z - 1] != 0) {
+								shadow[1] += 0.1f;
+								shadow[2] += 0.1f;
 							}
 							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_B, shadow);
 						}
-						if (!isYu || blocks[_x][_y+1][_z] == 0){
+						if (blocks[_x][_y+1][_z] == 0){
 							shadow[0] = 0.0f; shadow[1] = 0.0f; shadow[2] = 0.0f; shadow[3] = 0.0f;
-							if (isYu){
-								if (isXl && isZl && blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-								if (isXl && isZu && blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-								if (isXu && isZu && blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[2] += 0.1f;
-								if (isXu && isZl && blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[3] += 0.1f;
+							if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
+							if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
+							if (blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[2] += 0.1f;
+							if (blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[3] += 0.1f;
 
-								if (isXu && blocks[_x + 1][_y + 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y + 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isZu && blocks[_x][_y + 1][_z + 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-								if (isZl && blocks[_x][_y + 1][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
+							if (blocks[_x + 1][_y + 1][_z] != 0) {
+								shadow[2] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x - 1][_y + 1][_z] != 0) {
+								shadow[0] += 0.1f;
+								shadow[1] += 0.1f;
+							}
+							if (blocks[_x][_y + 1][_z + 1] != 0) {
+								shadow[1] += 0.1f;
+								shadow[2] += 0.1f;
+							}
+							if (blocks[_x][_y + 1][_z - 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[3] += 0.1f;
 							}
 							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_F, shadow);
 						}
-						if (!isZl || blocks[_x][_y][_z-1] == 0){
+						if (blocks[_x][_y][_z-1] == 0){
 							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isZl){
-								if (isYu && isXl && blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isXu && blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isXu && blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isXl && blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
 
-								if (isYu && blocks[_x][_y + 1][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x][_y - 1][_z - 1] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXu && blocks[_x + 1][_y][_z - 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
+							if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
+							if (blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
+							if (blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
+							if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
+
+							if (blocks[_x][_y + 1][_z - 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[1] += 0.1f;
 							}
+							if (blocks[_x][_y - 1][_z - 1] != 0) {
+								shadow[2] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x + 1][_y][_z - 1] != 0) {
+								shadow[1] += 0.1f;
+								shadow[2] += 0.1f;
+							}
+							if (blocks[_x - 1][_y][_z - 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							
 							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_B, shadow);
 						}
-						if (!isZu || blocks[_x][_y][_z+1] == 0){
+						if (blocks[_x][_y][_z+1] == 0){
 							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isZu){
-								if (isYu && isXu && blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isXl && blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isXl && blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isXu && blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
 
-								if (isYu && blocks[_x][_y + 1][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x][_y - 1][_z + 1] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXu && blocks[_x + 1][_y][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y][_z + 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
+							if (blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
+							if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
+							if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
+							if (blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
+
+							if (blocks[_x][_y + 1][_z + 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[1] += 0.1f;
 							}
+							if (blocks[_x][_y - 1][_z + 1] != 0) {
+								shadow[2] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x + 1][_y][_z + 1] != 0) {
+								shadow[0] += 0.1f;
+								shadow[3] += 0.1f;
+							}
+							if (blocks[_x - 1][_y][_z + 1] != 0) {
+								shadow[1] += 0.1f;
+								shadow[2] += 0.1f;
+							}
+							
 							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_F, shadow);
 						}
+					}
 				}
 			}
 		}
+
+		Chunk* chunk_ptr = chunks.GetChunk(x, y, z - 1);
+		for (int _x = 1; _x < CHUNK_SIZE_X - 1; _x++){
+
+			if (chunk_ptr != nullptr){
+				if (blocks[])
+			}
+		}
+
 		return vertices;
 	}*/
 
