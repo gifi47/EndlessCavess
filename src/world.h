@@ -11,7 +11,10 @@
 
 #ifdef _WIN32
 
-#include <windows.h>
+#define ERROR_ALREADY_EXISTS 183
+//#include <windows.h>
+extern "C" __declspec(dllimport) int __stdcall CreateDirectoryA(const char* lpPathName, void* lpSecurityAttributes);
+extern "C" __declspec(dllimport) unsigned long __stdcall GetLastError();
 #define CREATE_DIRECTORY(dir_name) ( CreateDirectoryA( (dir_name).c_str(), NULL) != 0 || GetLastError() == ERROR_ALREADY_EXISTS )
 
 #else
@@ -49,7 +52,8 @@
 */
 class ChunkStorage{
 public:
-	ChunkStorage(){
+	std::string worldName;
+	ChunkStorage(const std::string& name) : worldName(name) {
 		chunks = new Chunk[CHUNK_STORAGE_MAX_CHUNKS];
 	}
 	~ChunkStorage(){
@@ -87,7 +91,7 @@ public:
 		constexpr int half = CHUNK_STORAGE_MAX_CHUNKS / 2;
 		for (int i = 0; i < half; i++){
 			chunks[i].mesh.Dispose();
-			chunks[i].SaveToFile(WORLD_NAME); // TEMPORARY SOLUTION
+			chunks[i].SaveToFile(worldName); // TEMPORARY SOLUTION
 			chunks[i] = chunks[i + half];
 		}
 		chunks[half] = chunk;
@@ -101,7 +105,7 @@ public:
 			if (chunks[i].x == x && chunks[i].y == y && chunks[i].z == z) {
 
 				chunks[i].mesh.Dispose();
-				chunks[i].SaveToFile(WORLD_NAME);
+				chunks[i].SaveToFile(worldName);
 
 				for (int j = i + 1; j < loadedChunks; j++){
 					chunks[j - 1] = chunks[j];
@@ -121,7 +125,7 @@ public:
 			if (k < sorted_inds.size() && i == (sorted_inds[k])){
 				k++;
 				chunks[i].mesh.Dispose();
-				chunks[i].SaveToFile(WORLD_NAME);
+				chunks[i].SaveToFile(worldName);
 			} else {
 				chunks[e++] = chunks[i];
 			}
@@ -141,7 +145,13 @@ public:
 	noise::SimpleNoise simpleNoise2;
 	noise::SimpleNoise3D simpleNoise3d;
 
-	World(const std::string& name) : name(name), simpleNoise(30, 30, 2341414), simpleNoise2(54, 54, 31), simpleNoise3d(121, 134, 121, 14) {
+	World(const std::string& name): 
+		name(name), 
+		simpleNoise(30, 30, 2341414), 
+		simpleNoise2(54, 54, 31), 
+		simpleNoise3d(121, 134, 121, 14),
+		chunks(name)
+	{
         CREATE_DIRECTORY(name);
     }
 
@@ -172,6 +182,11 @@ public:
 		if (chunk_ptr == nullptr){
 			chunk_ptr = LoadChunk(x, y, z);
 		}
+		return chunk_ptr;
+	}
+
+	Chunk* GetChunkNoLoad(int x, int y, int z){
+		Chunk* chunk_ptr = chunks.GetChunk(x, y, z);
 		return chunk_ptr;
 	}
 
@@ -285,19 +300,19 @@ public:
 			}
 		}
 
-		chunk.InitializeMesh();
+		chunk.InitializeMesh(*this);
 		return chunk;
 	}
 
-	void RenderChunks(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP){
-		for (Chunk& chunk : chunks) {
+	void RenderChunks(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const{
+		for (Chunk chunk : chunks) {
 			chunk.Render(shader, texture, MVP);
 		}
 	}
 
 	void UpdateChunks(){
 		for (Chunk& chunk : chunks) {
-			chunk.UpdateMesh();
+			chunk.UpdateMesh(*this);
 		}
 	}
 

@@ -9,9 +9,9 @@
 
 #include "MyGraphicsExtensions.h"
 
-static const int CHUNK_SIZE_X = 32;
-static const int CHUNK_SIZE_Y = 48;
-static const int CHUNK_SIZE_Z = 32;
+static const int CHUNK_SIZE_X = 16;//32;
+static const int CHUNK_SIZE_Y = 16;//48;
+static const int CHUNK_SIZE_Z = 16;//32;
 
 static const char FACE_X_F = 0b000001;
 static const char FACE_X_B = 0b000010;
@@ -24,12 +24,15 @@ void AddFace(std::vector<float>& vertices, int block, int x, int y, int z, char 
 void AddFace(std::vector<float>& vertices, int block, int x, int y, int z, char face, float shadow[4]);
 void AddCube(std::vector<float>& vertices, int block, int x, int y, int z, float size);
 
+//void TryAddFace(std::vector<float>& vertices, int block, int x, int y, int z, 
+//	bool uu, bool u_, bool ul, bool _u, bool __, bool _l, bool lu, bool l_, bool ll, char face);
+
 #define TO_CHUNK_COORD(coord, coord_max) ( (coord) < 0 ? ((coord) + 1) / (coord_max) - 1 : (coord) / (coord_max) )
 #define TO_CHUNK_COORD_RAW_FLOAT(raw_coord, coord_max) ( (raw_coord) < -0.5f ? (static_cast<int>(std::round( (raw_coord) )) + 1) / (coord_max) - 1 : static_cast<int>(std::round( (raw_coord) )) / (coord_max) )
 
 #define TO_LOCAL_BLOCK_COORD(block_coord, chunk_coord, coord_max) ( (block_coord) - (coord_max) * (chunk_coord) )
 
-class ChunkStorage;
+class World;
 
 class Chunk{
 public:
@@ -43,469 +46,84 @@ public:
 	ObjectXYZUVS mesh;
 	bool isDirty = true;
 
-	int GetBlock(int x, int y, int z) const{
-		return blocks[TO_LOCAL_BLOCK_COORD(x, this->x, CHUNK_SIZE_X)][TO_LOCAL_BLOCK_COORD(y, this->y, CHUNK_SIZE_Y)][TO_LOCAL_BLOCK_COORD(z, this->z, CHUNK_SIZE_Z)];
-	}
+	int GetBlock(int x, int y, int z) const;
 
-	void SetBlock(int block, int x, int y, int z){
-		if (blocks[TO_LOCAL_BLOCK_COORD(x, this->x, CHUNK_SIZE_X)][TO_LOCAL_BLOCK_COORD(y, this->y, CHUNK_SIZE_Y)][TO_LOCAL_BLOCK_COORD(z, this->z, CHUNK_SIZE_Z)] == block) return;
-		blocks[TO_LOCAL_BLOCK_COORD(x, this->x, CHUNK_SIZE_X)][TO_LOCAL_BLOCK_COORD(y, this->y, CHUNK_SIZE_Y)][TO_LOCAL_BLOCK_COORD(z, this->z, CHUNK_SIZE_Z)] = block;
-		isDirty = true;
-	}
+	void SetBlock(int block, int x, int y, int z);
 
-	void InitializeMesh(){
-		std::vector<float> mesh_verts = CreateMesh2();
+	void InitializeMesh();
 
-		if (mesh_verts.size() == 0) isRendering = false;
-		else isRendering = true;
+	void UpdateMesh();
 
-		mesh = ObjectXYZUVS(mesh_verts);
-		isDirty = false;
-	}
+	void InitializeMesh(World& world);
 
-	void UpdateMesh(){
-		if (isDirty){
-			std::vector<float> mesh_verts = CreateMesh2();
+	void UpdateMesh(World& world);
 
-			if (mesh_verts.size() == 0) isRendering = false;
-			else isRendering = true;
+	std::vector<float> CreateMesh() const;
 
-			mesh.ChangeMesh(mesh_verts);
-			isDirty = false;
-		}
-	}
+	std::vector<float> CreateMesh2() const;
 
-	std::vector<float> CreateMesh() const{
-		std::vector<float> vertices(0);
+	std::vector<float> CreateMesh2(World& world) const;
 
-		for (int _x = 0; _x < CHUNK_SIZE_X; _x++){
-			for (int _y = 0; _y < CHUNK_SIZE_Y; _y++){
-				for (int _z = 0; _z < CHUNK_SIZE_Z; _z++){
-					int block = blocks[_x][_y][_z];
-					if (block != 0) {
-						if (_x == 0 || blocks[_x-1][_y][_z] == 0){
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_B);
-						}
-						if (_x == (CHUNK_SIZE_X - 1) || blocks[_x+1][_y][_z] == 0){
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_F);
-						}
-						if (_y == 0 || blocks[_x][_y-1][_z] == 0){
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_B);
-						}
-						if (_y == (CHUNK_SIZE_Y - 1) || blocks[_x][_y+1][_z] == 0){
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_F);
-						}
-						if (_z == 0 || blocks[_x][_y][_z-1] == 0){
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_B);
-						}
-						if (_z == (CHUNK_SIZE_Z - 1) || blocks[_x][_y][_z+1] == 0){
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_F);
-						}
-					}
-				}
-			}
-		}
-		return vertices;
-	}
+	void Pair(Chunk& chunk);
 
-	std::vector<float> CreateMesh2() const{
-		std::vector<float> vertices(0);
-		float shadow[4] = {0.05f, 0.05f, 0.05f, 0.05f};
-		bool isXl, isXu, isYl, isYu, isZl, isZu;
+	void Render(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const;
 
-		for (int _x = 0; _x < CHUNK_SIZE_X; _x++){
-			for (int _y = 0; _y < CHUNK_SIZE_Y; _y++){
-				for (int _z = 0; _z < CHUNK_SIZE_Z; _z++){
-					int block = blocks[_x][_y][_z];
-					if (block != 0) {
-						isXu = _x != (CHUNK_SIZE_X - 1);
-						isXl = _x != 0;
-						isYu = _y != (CHUNK_SIZE_Y - 1);
-						isYl = _y != 0;
-						isZu = _z != (CHUNK_SIZE_Z - 1);
-						isZl = _z != 0;
-						if (!isXl || blocks[_x-1][_y][_z] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isXl){
-								if (isYu && isZu && blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isZl && blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isZl && blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isZu && blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
-
-								if (isYu && blocks[_x - 1][_y + 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x - 1][_y - 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isZu && blocks[_x - 1][_y][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isZl && blocks[_x - 1][_y][_z - 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_B, shadow);
-						}
-						if (!isXu || blocks[_x+1][_y][_z] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isXu){
-								if (isYu && isZl && blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isZu && blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isZu && blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isZl && blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
-
-								if (isYu && blocks[_x + 1][_y + 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x + 1][_y - 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isZu && blocks[_x + 1][_y][_z + 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-								if (isZl && blocks[_x + 1][_y][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_F, shadow);
-						}
-						if (!isYl || blocks[_x][_y-1][_z] == 0){
-							shadow[0] = 0.15f; shadow[1] = 0.15f; shadow[2] = 0.15f; shadow[3] = 0.15f;
-							if (isYl){
-								if (isXl && isZu && blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[0] += 0.1f;
-								if (isXl && isZl && blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[1] += 0.1f;
-								if (isXu && isZl && blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-								if (isXu && isZu && blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
-
-								if (isXu && blocks[_x + 1][_y - 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y - 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isZu && blocks[_x][_y - 1][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isZl && blocks[_x][_y - 1][_z - 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_B, shadow);
-						}
-						if (!isYu || blocks[_x][_y+1][_z] == 0){
-							shadow[0] = 0.0f; shadow[1] = 0.0f; shadow[2] = 0.0f; shadow[3] = 0.0f;
-							if (isYu){
-								if (isXl && isZl && blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-								if (isXl && isZu && blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-								if (isXu && isZu && blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[2] += 0.1f;
-								if (isXu && isZl && blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[3] += 0.1f;
-
-								if (isXu && blocks[_x + 1][_y + 1][_z] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y + 1][_z] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isZu && blocks[_x][_y + 1][_z + 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-								if (isZl && blocks[_x][_y + 1][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_F, shadow);
-						}
-						if (!isZl || blocks[_x][_y][_z-1] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isZl){
-								if (isYu && isXl && blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isXu && blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isXu && blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isXl && blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
-
-								if (isYu && blocks[_x][_y + 1][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x][_y - 1][_z - 1] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXu && blocks[_x + 1][_y][_z - 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y][_z - 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_B, shadow);
-						}
-						if (!isZu || blocks[_x][_y][_z+1] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (isZu){
-								if (isYu && isXu && blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
-								if (isYu && isXl && blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-								if (isYl && isXl && blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
-								if (isYl && isXu && blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
-
-								if (isYu && blocks[_x][_y + 1][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[1] += 0.1f;
-								}
-								if (isYl && blocks[_x][_y - 1][_z + 1] != 0) {
-									shadow[2] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXu && blocks[_x + 1][_y][_z + 1] != 0) {
-									shadow[0] += 0.1f;
-									shadow[3] += 0.1f;
-								}
-								if (isXl && blocks[_x - 1][_y][_z + 1] != 0) {
-									shadow[1] += 0.1f;
-									shadow[2] += 0.1f;
-								}
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_F, shadow);
-						}
-					}
-				}
-			}
-		}
-		return vertices;
-	}
-
-	// TODO: add support for checking adjacent blocks from nearby loaded chunks! 
-	/*std::vector<float> CreateMesh3(ChunkStorage& chunks) const{
-		std::vector<float> vertices(0);
-		float shadow[4] = {0.05f, 0.05f, 0.05f, 0.05f};
-
-		for (int _x = 1; _x < (CHUNK_SIZE_X - 1); _x++){
-			for (int _y = 1; _y < (CHUNK_SIZE_Y - 1); _y++){
-				for (int _z = 1; _z < (CHUNK_SIZE_Z - 1); _z++){
-					int block = blocks[_x][_y][_z];
-					if (block != 0) {
-						if (blocks[_x-1][_y][_z] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
-							if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
-							if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-							if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
-
-							if (blocks[_x - 1][_y + 1][_z] != 0) {
-								shadow[0] += 0.1f;
-								shadow[1] += 0.1f;
-							}
-							if (blocks[_x - 1][_y - 1][_z] != 0) {
-								shadow[2] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x - 1][_y][_z + 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x - 1][_y][_z - 1] != 0) {
-								shadow[1] += 0.1f;
-								shadow[2] += 0.1f;
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_B, shadow);
-						}
-						if (blocks[_x+1][_y][_z] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-							if (blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-							if (blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-							if (blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
-							if (blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
-
-							if (blocks[_x + 1][_y + 1][_z] != 0) {
-								shadow[0] += 0.1f;
-								shadow[1] += 0.1f;
-							}
-							if (blocks[_x + 1][_y - 1][_z] != 0) {
-								shadow[2] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x + 1][_y][_z + 1] != 0) {
-								shadow[1] += 0.1f;
-								shadow[2] += 0.1f;
-							}
-							if (blocks[_x + 1][_y][_z - 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_X_F, shadow);
-						}
-						if (blocks[_x][_y-1][_z] == 0){
-							shadow[0] = 0.15f; shadow[1] = 0.15f; shadow[2] = 0.15f; shadow[3] = 0.15f;
-							if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[0] += 0.1f;
-							if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[1] += 0.1f;
-							if (blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-							if (blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
-
-							if (blocks[_x + 1][_y - 1][_z] != 0) {
-								shadow[2] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x - 1][_y - 1][_z] != 0) {
-								shadow[0] += 0.1f;
-								shadow[1] += 0.1f;
-							}
-							if (blocks[_x][_y - 1][_z + 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x][_y - 1][_z - 1] != 0) {
-								shadow[1] += 0.1f;
-								shadow[2] += 0.1f;
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_B, shadow);
-						}
-						if (blocks[_x][_y+1][_z] == 0){
-							shadow[0] = 0.0f; shadow[1] = 0.0f; shadow[2] = 0.0f; shadow[3] = 0.0f;
-							if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-							if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-							if (blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[2] += 0.1f;
-							if (blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[3] += 0.1f;
-
-							if (blocks[_x + 1][_y + 1][_z] != 0) {
-								shadow[2] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x - 1][_y + 1][_z] != 0) {
-								shadow[0] += 0.1f;
-								shadow[1] += 0.1f;
-							}
-							if (blocks[_x][_y + 1][_z + 1] != 0) {
-								shadow[1] += 0.1f;
-								shadow[2] += 0.1f;
-							}
-							if (blocks[_x][_y + 1][_z - 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Y_F, shadow);
-						}
-						if (blocks[_x][_y][_z-1] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-
-							if (blocks[_x - 1][_y + 1][_z - 1] != 0) shadow[0] += 0.1f;
-							if (blocks[_x + 1][_y + 1][_z - 1] != 0) shadow[1] += 0.1f;
-							if (blocks[_x + 1][_y - 1][_z - 1] != 0) shadow[2] += 0.1f;
-							if (blocks[_x - 1][_y - 1][_z - 1] != 0) shadow[3] += 0.1f;
-
-							if (blocks[_x][_y + 1][_z - 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[1] += 0.1f;
-							}
-							if (blocks[_x][_y - 1][_z - 1] != 0) {
-								shadow[2] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x + 1][_y][_z - 1] != 0) {
-								shadow[1] += 0.1f;
-								shadow[2] += 0.1f;
-							}
-							if (blocks[_x - 1][_y][_z - 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_B, shadow);
-						}
-						if (blocks[_x][_y][_z+1] == 0){
-							shadow[0] = 0.05f; shadow[1] = 0.05f; shadow[2] = 0.05f; shadow[3] = 0.05f;
-
-							if (blocks[_x + 1][_y + 1][_z + 1] != 0) shadow[0] += 0.1f;
-							if (blocks[_x - 1][_y + 1][_z + 1] != 0) shadow[1] += 0.1f;
-							if (blocks[_x - 1][_y - 1][_z + 1] != 0) shadow[2] += 0.1f;
-							if (blocks[_x + 1][_y - 1][_z + 1] != 0) shadow[3] += 0.1f;
-
-							if (blocks[_x][_y + 1][_z + 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[1] += 0.1f;
-							}
-							if (blocks[_x][_y - 1][_z + 1] != 0) {
-								shadow[2] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x + 1][_y][_z + 1] != 0) {
-								shadow[0] += 0.1f;
-								shadow[3] += 0.1f;
-							}
-							if (blocks[_x - 1][_y][_z + 1] != 0) {
-								shadow[1] += 0.1f;
-								shadow[2] += 0.1f;
-							}
-							
-							AddFace(vertices, block, _x+x*CHUNK_SIZE_X, _y+y*CHUNK_SIZE_Y, _z+z*CHUNK_SIZE_Z, FACE_Z_F, shadow);
-						}
-					}
-				}
-			}
-		}
-
-		Chunk* chunk_ptr = chunks.GetChunk(x, y, z - 1);
-		for (int _x = 1; _x < CHUNK_SIZE_X - 1; _x++){
-
-			if (chunk_ptr != nullptr){
-				if (blocks[])
-			}
-		}
-
-		return vertices;
-	}*/
-
-	void Pair(Chunk& chunk){
-		isRendering = false;
-	}
-
-	void Render(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const{
-		if (isRendering)
-			mesh.RenderMVP(shader, texture, MVP);
-	}
-
-	void SaveToFile(const std::string& worldDir) const {
-        std::string filename = GetChunkFileName(worldDir);
-        std::ofstream file(filename, std::ios::binary);
-        if (!file) return;
-        
-        file.write(reinterpret_cast<const char*>(blocks), sizeof(blocks));
-    }
+	void SaveToFile(const std::string& worldDir) const;
     
-    bool LoadFromFile(const std::string& worldDir) {
-        std::string filename = GetChunkFileName(worldDir);
-        std::ifstream file(filename, std::ios::binary);
-        if (!file) return false;
-
-        file.read(reinterpret_cast<char*>(blocks), sizeof(blocks));
-        //std::cout << "Loaded chunk: " << x << " " << y << " " << z << "\n";
-        return true;
-    }
+    bool LoadFromFile(const std::string& worldDir);
 
 private:
-	std::string GetChunkFileName(const std::string& worldDir) const {
-        return worldDir + "/chunk_" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z) + ".bin";
-    }
+	std::string GetChunkFileName(const std::string& worldDir) const;
 };
 
 bool CheckCollision(const Chunk& chunk, float min_x, float min_y, float min_z, float max_x, float max_y, float max_z);
+
+template <int chunk_x, int chunk_y, int chunk_z>
+inline constexpr int GET_BLOCK(int local_x, int local_y, int local_z, Chunk* neighbors[3][3][3]) {
+    if constexpr (chunk_x == 1 && chunk_y == 1 && chunk_z == 1) {
+        return neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z];
+    } else {
+        return neighbors[chunk_x][chunk_y][chunk_z] != nullptr && 
+               neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z];
+    }
+}
+
+template <int chunk_x, int chunk_y, int chunk_z>
+inline constexpr bool CHECK_SOLID(int local_x, int local_y, int local_z, Chunk* neighbors[3][3][3]) {
+    if constexpr (chunk_x == 1 && chunk_y == 1 && chunk_z == 1) {
+        return neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] != 0;
+    } else {
+        return neighbors[chunk_x][chunk_y][chunk_z] != nullptr && 
+               neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] != 0;
+    }
+}
+
+inline bool CHECK_SOLID(int chunk_x, int chunk_y, int chunk_z, int local_x, int local_y, int local_z, Chunk* neighbors[3][3][3]) {
+    if (chunk_x == 1 && chunk_y == 1 && chunk_z == 1) {
+        return neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] != 0;
+    } else {
+        return neighbors[chunk_x][chunk_y][chunk_z] != nullptr && 
+               neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] != 0;
+    }
+}
+
+template <int chunk_x, int chunk_y, int chunk_z>
+inline constexpr bool CHECK_TRANSPARENT(int local_x, int local_y, int local_z, Chunk* neighbors[3][3][3]) {
+    if constexpr (chunk_x == 1 && chunk_y == 1 && chunk_z == 1) {
+        return neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] == 0;
+    } else {
+        return neighbors[chunk_x][chunk_y][chunk_z] != nullptr && 
+               neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] == 0;
+    }
+}
+
+inline bool CHECK_TRANSPARENT(int chunk_x, int chunk_y, int chunk_z, int local_x, int local_y, int local_z, Chunk* neighbors[3][3][3]) {
+    if (chunk_x == 1 && chunk_y == 1 && chunk_z == 1) {
+        return neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] == 0;
+    } else {
+        return neighbors[chunk_x][chunk_y][chunk_z] != nullptr && 
+               neighbors[chunk_x][chunk_y][chunk_z]->blocks[local_x][local_y][local_z] == 0;
+    }
+}
 
 #endif //ENDLESS_CAVESS_CHUNK_H

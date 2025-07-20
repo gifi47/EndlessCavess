@@ -2,7 +2,6 @@
 #define _UNICODE
 
 #define BLOCK_STORY
-#define WORLD_NAME "world2"
 
 #include <iostream>
 #include <vector>
@@ -68,6 +67,30 @@ std::ostream& operator<<(std::ostream& os, const glm::ivec3& value){
 #define CHECK_COLLISION1(p1) world.CheckCollision((p1).x - 0.3f, (p1).y - 1.4f, (p1).z - 0.3f, (p1).x + 0.3f, (p1).y + 0.4f, (p1).z + 0.3f)
 
 #ifdef _WIN32
+
+extern "C" {
+    __declspec(dllimport) int __stdcall MultiByteToWideChar(
+        unsigned int CodePage,
+        unsigned int dwFlags,
+        const char* lpMultiByteStr,
+        int cbMultiByte,
+        wchar_t* lpWideCharStr,
+        int cchWideChar
+    );
+
+    __declspec(dllimport) int __stdcall WideCharToMultiByte(
+        unsigned int CodePage,
+        unsigned int dwFlags,
+        const wchar_t* lpWideCharStr,
+        int cchWideChar,
+        char* lpMultiByteStr,
+        int cbMultiByte,
+        const char* lpDefaultChar,
+        int* lpUsedDefaultChar
+    );
+}
+
+constexpr unsigned int CP_UTF8 = 65001;
 
 std::wstring utf8_to_wstring(const std::string& utf8_str) {
     int len = MultiByteToWideChar(CP_UTF8, 0, utf8_str.c_str(), -1, NULL, 0);
@@ -199,7 +222,7 @@ std::string f_to_s(float value, int precision){
 	return std::to_string(q) + ".0" + std::to_string(b);
 }
 
-void main_process(){
+void main_process(const std::string& worldName){
 	if (!glfwInit())
 	{
 		fprintf(stderr, "Failed to initialize GLFW\n");
@@ -615,7 +638,7 @@ void main_process(){
 	glm::mat4 cube_to_place_model = glm::mat4(1.0f);
 	cube_to_place_model = glm::translate(cube_to_place_model, glm::vec3(-0.2f, -0.2f, 0.5f));
 
-	World world(WORLD_NAME);
+	World world(worldName);
 
 	world.LoadChunk(0, 0, 0);
 	world.LoadChunk(0, 0, 1);
@@ -1083,10 +1106,12 @@ void main_process(){
 	glfwTerminate();
 }
 
-int main(){
-	std::cout << "HELLO WORLD!";
+int main(int argc, char* argv[]){
+	std::string worldName = "world2";
+	if (argc > 1) worldName = argv[1];
+	std::cout << "HELLO WORLD: " << worldName;
 	//try{
-		main_process();
+		main_process(worldName);
 	/*}catch (...){
 	    std::cout << "An exception occurred. Exception Nr. " << '\n';
 	    std::exception_ptr p = std::current_exception();

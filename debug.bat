@@ -10,7 +10,7 @@ set EXECUTABLE=EndlessCavess.exe
 set COMPILER=g++
 set LINKER=g++
 set MEDIA_DEFINE=-Dmedia="\"!MEDIA_DIR:\=/!/\""
-set COMPILER_FLAGS=-std=c++20 -c -I%SOURCE_DIR% %MEDIA_DEFINE% -DDEBUG
+set COMPILER_FLAGS=-std=c++20 -c -I%SOURCE_DIR% %MEDIA_DEFINE% -DDEBUG -DWORLD_NAME="\"world2\""
 set LINKER_FLAGS=-L%LIB_DIR% -lMyGraphics2 -lsoil -lopengl32 -lglew32 -lglfw3
 
 :: Check media folder

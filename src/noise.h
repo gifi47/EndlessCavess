@@ -11,22 +11,11 @@
 
 namespace noise {
 
-	float clamp(float x, float lowerlimit = 0.0f, float upperlimit = 1.0f) {
-	  	if (x < lowerlimit) return lowerlimit;
-	  	if (x > upperlimit) return upperlimit;
-	  	return x;
-	}
+	float clamp(float x, float lowerlimit = 0.0f, float upperlimit = 1.0f);
 
-	float smoothstep(float edge0, float edge1, float x) {
-   		// Scale, and clamp x to 0..1 range
-   		x = noise::clamp((x - edge0) / (edge1 - edge0));
+	float smoothstep(float edge0, float edge1, float x);
 
-   		return x * x * (3.0f - 2.0f * x);
-	}
-
-	float smooth(float x, float f1, float f2){
-		return smoothstep(0, 1, x) * (f2 - f1) + f1;
-	}
+	float smooth(float x, float f1, float f2);
 
 	class SimpleNoise{
 	public:
@@ -35,41 +24,9 @@ namespace noise {
 
 		std::vector<std::vector<float> > grid;
 
-		SimpleNoise(int width, int height, long long seed){
-			this->width = width;
-			this->height = height;
+		SimpleNoise(int width, int height, long long seed);
 
-			std::random_device rd;
-		    std::mt19937 gen(rd());
-		    
-		    // Uniform real distribution
-		    std::uniform_real_distribution<> real_dis(0.0, 1.0);
-
-			grid.resize(width);
-			for (int w = 0; w < width; w++){
-				grid[w] = std::vector<float>(height);
-				for (int h = 0; h < height; h++){
-					grid[w][h] = real_dis(gen);
-				}
-			}
-		}
-
-		float GetValue(float x, float y){
-			float w_f = x * (width - 1);
-			int w_i = static_cast<int>(w_f);
-			if (w_i > width - 2) w_i = width - 2;
-			else if (w_i < 0) w_i = 0;
-
-			float h_f = y * (height - 1);
-			int h_i = static_cast<int>(h_f);
-			if (h_i > height - 2) h_i = height - 2;
-			else if (h_i < 0) h_i = 0;
-
-			float h_y = 1 - ((h_i + 1) - h_f);
-			float w_x = 1 - ((w_i + 1) - w_f);
-			//return (grid[w_i][h_i] * h_y + grid[w_i][h_i + 1] * (1 - h_y)) * w_x + (grid[w_i + 1][h_i] * h_y + grid[w_i + 1][h_i + 1] * (1 - h_y)) * (1 - w_x);
-			return smooth(w_x, smooth(h_y, grid[w_i][h_i], grid[w_i][h_i + 1]), smooth(h_y, grid[w_i + 1][h_i], grid[w_i + 1][h_i + 1]));
-		}
+		float GetValue(float x, float y);
 
 		template <typename T>
 		void Print(T& str){
@@ -91,57 +48,9 @@ namespace noise {
 
 		std::vector<std::vector<std::vector<float> > > grid;
 
-		SimpleNoise3D(int width, int height, int depth, long long seed){
-			this->width = width;
-			this->height = height;
-			this->depth = depth;
+		SimpleNoise3D(int width, int height, int depth, long long seed);
 
-			std::random_device rd;
-		    std::mt19937 gen(rd());
-		    
-		    // Uniform real distribution
-		    std::uniform_real_distribution<> real_dis(0.0, 1.0);
-
-			grid.resize(width);
-			for (int w = 0; w < width; w++){
-				grid[w] = std::vector<std::vector<float> >(height);
-				for (int h = 0; h < height; h++){
-					grid[w][h] = std::vector<float>(depth);
-					for (int d = 0; d < depth; d++){
-						grid[w][h][d] = real_dis(gen);
-					}
-				}
-			}
-		}
-
-		float GetValue(float x, float y, float z){
-			float w_f = x * (width - 1);
-			int w_i = static_cast<int>(w_f);
-			if (w_i > width - 2) w_i = width - 2;
-			else if (w_i < 0) w_i = 0;
-
-			float h_f = y * (height - 1);
-			int h_i = static_cast<int>(h_f);
-			if (h_i > height - 2) h_i = height - 2;
-			else if (h_i < 0) h_i = 0;
-
-			float d_f = z * (depth - 1);
-			int d_i = static_cast<int>(d_f);
-			if (d_i > depth - 2) d_i = depth - 2;
-			else if (d_i < 0) d_i = 0;
-
-			float h_y = 1 - ((h_i + 1) - h_f);
-			float w_x = 1 - ((w_i + 1) - w_f);
-			float d_z = 1 - ((d_i + 1) - d_f);
-			//return (grid[w_i][h_i] * h_y + grid[w_i][h_i + 1] * (1 - h_y)) * w_x + (grid[w_i + 1][h_i] * h_y + grid[w_i + 1][h_i + 1] * (1 - h_y)) * (1 - w_x);
-			
-			float z1 = smooth(d_z, grid[w_i][h_i][d_i], 		grid[w_i][h_i][d_i + 1]);
-			float z2 = smooth(d_z, grid[w_i][h_i + 1][d_i], 	grid[w_i][h_i + 1][d_i + 1]);
-			float z3 = smooth(d_z, grid[w_i + 1][h_i][d_i], 	grid[w_i + 1][h_i][d_i + 1]);
-			float z4 = smooth(d_z, grid[w_i + 1][h_i + 1][d_i], grid[w_i + 1][h_i + 1][d_i + 1]);
-
-			return smooth(w_x, smooth(h_y, z1, z2), smooth(h_y, z3, z4));
-		}
+		float GetValue(float x, float y, float z);
 
 	};
 
