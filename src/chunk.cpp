@@ -455,10 +455,10 @@ std::vector<float> Chunk::CreateMesh2(World& world) const{
 		}
 	}
 	for (int _z = 1; _z <= CHUNK_SIZE_Z; _z++){
-		blocks[0][0][_z] = (neighbors[1][0][0] == nullptr ? 0 : neighbors[0][0][1]->blocks[CHUNK_SIZE_X - 1][CHUNK_SIZE_Y - 1][_z - 1]);
-		blocks[CHUNK_SIZE_X + 1][0][_z] = (neighbors[1][0][0] == nullptr ? 0 : neighbors[2][0][1]->blocks[0][CHUNK_SIZE_Y - 1][_z - 1]);
-		blocks[CHUNK_SIZE_X + 1][CHUNK_SIZE_Y + 1][_z] = (neighbors[1][0][0] == nullptr ? 0 : neighbors[2][2][1]->blocks[0][0][_z - 1]);
-		blocks[0][CHUNK_SIZE_Y + 1][_z] = (neighbors[1][0][0] == nullptr ? 0 : neighbors[0][2][1]->blocks[CHUNK_SIZE_X - 1][0][_z - 1]);
+		blocks[0][0][_z] = (neighbors[0][0][1] == nullptr ? 0 : neighbors[0][0][1]->blocks[CHUNK_SIZE_X - 1][CHUNK_SIZE_Y - 1][_z - 1]);
+		blocks[CHUNK_SIZE_X + 1][0][_z] = (neighbors[2][0][1] == nullptr ? 0 : neighbors[2][0][1]->blocks[0][CHUNK_SIZE_Y - 1][_z - 1]);
+		blocks[CHUNK_SIZE_X + 1][CHUNK_SIZE_Y + 1][_z] = (neighbors[2][2][1] == nullptr ? 0 : neighbors[2][2][1]->blocks[0][0][_z - 1]);
+		blocks[0][CHUNK_SIZE_Y + 1][_z] = (neighbors[0][2][1] == nullptr ? 0 : neighbors[0][2][1]->blocks[CHUNK_SIZE_X - 1][0][_z - 1]);
 		for (int _x = 1; _x <= CHUNK_SIZE_X; _x++){
 			blocks[_x][0][_z] = (neighbors[1][0][1] == nullptr ? 0 : neighbors[1][0][1]->blocks[_x - 1][CHUNK_SIZE_Y - 1][_z - 1]);
 			blocks[_x][CHUNK_SIZE_Y + 1][_z] = (neighbors[1][2][1] == nullptr ? 0 : neighbors[1][2][1]->blocks[_x - 1][0][_z - 1]);
