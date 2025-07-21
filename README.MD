@@ -31,3 +31,31 @@ You can specify world name when launching executable from console: EndlessCaves.
 Tested with msys2 ucrt64 g++ compiler on Windows 10 x64
 
 Tested with g++ on Linux Fedora 38
+
+*Controls:*
+
+`WASD` - move
+
+`Shift` - speedup while pressed
+
+`Alt` - extreme speed up while pressed
+
+`F` - toggle flying mode
+
+`Space` - jump
+
+`Mouse Left Click` - destroy block
+
+`Mouse Right Click` - place block
+
+`Arrow UP` - Select block that are you looking at
+
+`Arrow Left` - Select previous block by Id
+
+`Arrow Right` - Select next block by Id
+
+`Arrow Down` - Load all nearby chunks in a 6x1x6 volume
+
+`-` - Unload distant/not visible chunks
+
+`Backspace` - Set all chunks isDirty=true, so when chunk update triggers all chunks gonna be updated. Great for fixing lighting on chunk borders.

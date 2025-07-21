@@ -325,6 +325,8 @@ class ObjectXYZUVS
 		ObjectXYZUVS(const Rendering::Batch& batch);
 		ObjectXYZUVS(std::string modelFileName);
 		void RenderMVP(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const;
+		//void PrepareShader(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const;
+		void Render() const;
 		template<typename Func>
 		void RenderMVP(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP, Func func) const{
 			shader.Use();
@@ -338,6 +340,7 @@ class ObjectXYZUVS
 			glBindVertexArray(0);
 		}
 		void Dispose();
+		static void PrepareShader(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP);
 };
 
 class DynamicQuadXYZ {

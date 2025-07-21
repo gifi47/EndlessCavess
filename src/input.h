@@ -19,6 +19,11 @@ namespace input{
 	static int vertical = 0;
 	static int sideArrows = 0;
 
+	static bool buttonShift = false;
+	static bool buttonAlt = false;
+	static bool buttonSpace = false;
+	static bool buttonF = false;
+
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -131,6 +136,29 @@ namespace input{
 				buttonRightBracket = true;
 			else if (action == GLFW_RELEASE)
 				buttonRightBracket = false;
+
+		if (key == GLFW_KEY_LEFT_SHIFT)
+			if (action == GLFW_PRESS)
+				buttonShift = true;
+			else if (action == GLFW_RELEASE)
+				buttonShift = false;
+
+		if (key == GLFW_KEY_LEFT_ALT)
+			if (action == GLFW_PRESS)
+				buttonAlt = true;
+			else if (action == GLFW_RELEASE)
+				buttonAlt = false;
+
+		if (key == GLFW_KEY_SPACE)
+			if (action == GLFW_PRESS)
+				buttonSpace = true;
+			else if (action == GLFW_RELEASE)
+				buttonSpace = false;
+		if (key == GLFW_KEY_F)
+			if (action == GLFW_PRESS)
+				buttonF = true;
+			else if (action == GLFW_RELEASE)
+				buttonF = false;
 
 		//forward
 		if (key == GLFW_KEY_W && action == GLFW_PRESS)

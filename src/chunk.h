@@ -9,9 +9,9 @@
 
 #include "MyGraphicsExtensions.h"
 
-static const int CHUNK_SIZE_X = 16;//32;
-static const int CHUNK_SIZE_Y = 16;//48;
-static const int CHUNK_SIZE_Z = 16;//32;
+static const int CHUNK_SIZE_X = 32;
+static const int CHUNK_SIZE_Y = 48;
+static const int CHUNK_SIZE_Z = 32;
 
 static const char FACE_X_F = 0b000001;
 static const char FACE_X_B = 0b000010;
@@ -66,7 +66,9 @@ public:
 
 	void Pair(Chunk& chunk);
 
-	void Render(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const;
+	void RenderMVP(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const;
+
+	void Render() const;
 
 	void SaveToFile(const std::string& worldDir) const;
     

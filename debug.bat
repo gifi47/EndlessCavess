@@ -44,4 +44,8 @@ if errorlevel 1 (
 :: Clean up object files
 del %BUILD_DIR%\*.o
 
-%BUILD_DIR%\%EXECUTABLE%
+if "%1"=="" (
+    %BUILD_DIR%\%EXECUTABLE%
+) else (
+    %BUILD_DIR%\%EXECUTABLE% %1
+)

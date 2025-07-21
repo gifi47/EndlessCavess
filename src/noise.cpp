@@ -18,12 +18,12 @@ float noise::smooth(float x, float f1, float f2){
 }
 
 
-noise::SimpleNoise::SimpleNoise(int width, int height, long long seed){
+noise::SimpleNoise::SimpleNoise(int width, int height, unsigned long seed){
 	this->width = width;
 	this->height = height;
 
-	std::random_device rd;
-    std::mt19937 gen(rd());
+	//std::random_device rd;
+    std::mt19937 gen(seed);
     
     // Uniform real distribution
     std::uniform_real_distribution<> real_dis(0.0, 1.0);
@@ -33,6 +33,24 @@ noise::SimpleNoise::SimpleNoise(int width, int height, long long seed){
 		grid[w] = std::vector<float>(height);
 		for (int h = 0; h < height; h++){
 			grid[w][h] = real_dis(gen);
+		}
+	}
+}
+
+void noise::SimpleNoise::Smooth(){
+	//std::vector<std::vector<float>> grid = this->grid;
+	for (int w = 0; w < width; w++){
+		for (int h = 0; h < height; h++){
+			float t, b, l, r;
+			if (h == 0) t = 1.0f; else t = grid[w][h - 1];
+			if (h == height - 1) b = 1.0f; else b = grid[w][h + 1];
+			if (w == 0) t = 1.0f; else l = grid[w - 1][h];
+			if (w == width - 1) r = 1.0f; else r = grid[w + 1][h];
+
+			float tl = noise::smooth(0.5f, t, l);
+			float br = noise::smooth(0.5f, b, r);
+			float val = noise::smooth(0.5f, tl, br);
+			this->grid[w][h] = val;
 		}
 	}
 }
@@ -64,13 +82,13 @@ void noise::SimpleNoise::Print(T& str){
 	}
 }*/
 
-noise::SimpleNoise3D::SimpleNoise3D(int width, int height, int depth, long long seed){
+noise::SimpleNoise3D::SimpleNoise3D(int width, int height, int depth, unsigned long seed){
 	this->width = width;
 	this->height = height;
 	this->depth = depth;
 
-	std::random_device rd;
-    std::mt19937 gen(rd());
+	//std::random_device rd;
+    std::mt19937 gen(seed);
     
     // Uniform real distribution
     std::uniform_real_distribution<> real_dis(0.0, 1.0);

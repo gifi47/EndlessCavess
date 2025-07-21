@@ -611,7 +611,7 @@ void main_process(const std::string& worldName){
 	AddCube(chunkMesh, 0, 0, 0, 0, 0.51f);
 	ObjectXYZUV temp_cube(chunkMesh);
 
-	float speed = 3.0f * 3.0f;
+	float speed = 3.0f;
 
 	double prev_mouse_cursor_x = input::mouse_cursor_x;
 	double prev_mouse_cursor_y = input::mouse_cursor_y;
@@ -661,6 +661,13 @@ void main_process(const std::string& worldName){
 		0, 0, 0.03, 0,
 		-0.9, 0.85, 0.3, 1
 	};
+
+	bool isFlying = false;
+
+	float gravity = -4.66f;
+	float momentum = 0;
+	float max_momentum = -10.0f;
+	float jump_momentum = 0;
 
 	// MAIN LOOP
 	while (!glfwWindowShouldClose(window)) {
@@ -873,7 +880,8 @@ void main_process(const std::string& worldName){
 
 		if (input::buttonBackspace){
 			input::buttonBackspace = false;
-			dgv1x1.BackSpace();
+			world.SetDirty();
+			//dgv1x1.BackSpace();
 		}
 
 		if (input::buttonMinus){
@@ -883,14 +891,48 @@ void main_process(const std::string& worldName){
 			//dgv1x1.Minus();
 		}
 
+		if (input::buttonF){
+			input::buttonF = false;
+			isFlying = !isFlying;
+		}
+
 		float offsetX = (float)(-prev_mouse_cursor_x + input::mouse_cursor_x);
 		prev_mouse_cursor_x = input::mouse_cursor_x;
 		float offsetY = (float)(prev_mouse_cursor_y - input::mouse_cursor_y);
 		prev_mouse_cursor_y = input::mouse_cursor_y;
 
-		glm::vec3 newpos = ST.camera.position + ST.camera.forward * speed * static_cast<float>(deltaTime) * static_cast<float>(input::forward);
-		newpos += ST.camera.right * speed * static_cast<float>(deltaTime) * static_cast<float>(input::side);
+		glm::vec3 newpos;
+		if (isFlying){
+			newpos = ST.camera.position + ST.camera.forward * speed * static_cast<float>(deltaTime) * static_cast<float>(input::forward) * (input::buttonShift ? 5.0f : 1.0f) * (input::buttonAlt ? 15.0f : 1.0f);
+			newpos += ST.camera.right * speed * static_cast<float>(deltaTime) * static_cast<float>(input::side) * (input::buttonShift ? 5.0f : 1.0f) * (input::buttonAlt ? 15.0f : 1.0f);
+		} else {
+			momentum += gravity * deltaTime;
+			if (momentum < max_momentum) momentum = max_momentum;
+			bool canFall = !CHECK_COLLISION(ST.camera.position, glm::vec3(0, momentum * deltaTime, 0));
+			
 
+
+			if (canFall){
+				ST.camera.position += glm::vec3(0, momentum * deltaTime, 0);
+			} else {
+				momentum = 0;
+				if (input::buttonSpace){
+					jump_momentum = 10.0f;
+				}
+			}
+
+			if (jump_momentum > 0){
+				bool canJump = !CHECK_COLLISION(ST.camera.position, glm::vec3(0, jump_momentum * deltaTime, 0));
+
+				if (canJump){
+					ST.camera.position += glm::vec3(0, jump_momentum * deltaTime, 0);
+				}
+				jump_momentum += gravity * deltaTime;
+			}
+
+			newpos = ST.camera.position + glm::vec3(ST.camera.right.z, 0, -ST.camera.right.x) * speed * static_cast<float>(deltaTime) * static_cast<float>(input::forward) * (input::buttonShift ? 5.0f : 1.0f) * (input::buttonAlt ? 15.0f : 1.0f);
+			newpos += ST.camera.right * speed * static_cast<float>(deltaTime) * static_cast<float>(input::side) * (input::buttonShift ? 5.0f : 1.0f) * (input::buttonAlt ? 15.0f : 1.0f);
+		}
 		glm::vec3 diffpos = newpos - ST.camera.position;
 
 		bool all_c = CHECK_COLLISION(ST.camera.position, diffpos);

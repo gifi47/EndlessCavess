@@ -1582,6 +1582,18 @@ void ObjectXYZUVS::RenderMVP(Rendering::Shader& shader, Rendering::Texture& text
 	//glDisable(GL_BLEND);
 }
 
+void ObjectXYZUVS::PrepareShader(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP){
+	shader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(shader.programId, "MVP"), 1, GL_FALSE, &MVP[0][0]);
+	texture.Use();
+}
+
+void ObjectXYZUVS::Render() const{
+	glBindVertexArray(this->VAO);
+	glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, nullptr);
+	glBindVertexArray(0);
+}
+
 /*template<typename Func>
 void ObjectXYZUVS::RenderMVP(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP, Func func) const{
 	shader.Use();

@@ -30,6 +30,7 @@ extern "C" __declspec(dllimport) unsigned long __stdcall GetLastError();
 #include <string>
 #include <vector>
 #include <cmath>
+#include <random>
 
 #include <GL/glew.h>
 
@@ -139,7 +140,7 @@ class World
 public:
 
 	std::string name;
-	long long seed;
+	unsigned long seed;
 	ChunkStorage chunks;
 	noise::SimpleNoise simpleNoise;
 	noise::SimpleNoise simpleNoise2;
@@ -147,12 +148,17 @@ public:
 
 	World(const std::string& name): 
 		name(name), 
-		simpleNoise(30, 30, 2341414), 
-		simpleNoise2(54, 54, 31), 
-		simpleNoise3d(121, 134, 121, 14),
 		chunks(name)
 	{
         CREATE_DIRECTORY(name);
+        LoadSeed();
+
+        if (seed == 0) {
+            GenerateNewSeed();
+            SaveSeed();
+        }
+
+        InitializeNoiseGenerators();
     }
 
 	int GetBlock(int x, int y, int z){
@@ -305,8 +311,15 @@ public:
 	}
 
 	void RenderChunks(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const{
+		ObjectXYZUVS::PrepareShader(shader, texture, MVP);
 		for (Chunk chunk : chunks) {
-			chunk.Render(shader, texture, MVP);
+			chunk.Render();
+		}
+	}
+
+	void SetDirty(){
+		for (Chunk& chunk : chunks) {
+			chunk.isDirty = true;
 		}
 	}
 
@@ -441,6 +454,46 @@ public:
 		}
 		return false;
 	}
+
+private:
+    void InitializeNoiseGenerators() {
+        simpleNoise = noise::SimpleNoise(29, 30, seed);
+        //simpleNoise = noise::SimpleNoise(22, 30, seed);
+        
+        //simpleNoise = noise::SimpleNoise(5, 5, seed);
+        
+        //simpleNoise.Smooth();
+        //simpleNoise.Smooth();
+        //simpleNoise.Smooth();
+        //simpleNoise.Smooth();
+        //simpleNoise.Smooth();
+        //simpleNoise.Smooth();
+
+
+        simpleNoise2 = noise::SimpleNoise(54, 54, seed + 1);
+        simpleNoise3d = noise::SimpleNoise3D(121, 134, 121, seed + 2);
+    }
+
+    void GenerateNewSeed() {
+        std::random_device rd;
+        seed = rd();
+    }
+
+    void SaveSeed() {
+        std::ofstream seedFile(name + "/seed.bin", std::ios::binary);
+        if (seedFile) {
+            seedFile.write(reinterpret_cast<const char*>(&seed), sizeof(seed));
+        }
+    }
+
+    void LoadSeed() {
+        std::ifstream seedFile(name + "/seed.bin", std::ios::binary);
+        if (seedFile) {
+            seedFile.read(reinterpret_cast<char*>(&seed), sizeof(seed));
+        } else {
+            seed = 0;  // Indicates no seed was loaded
+        }
+    }
 };
 
 #endif //WORLD_H

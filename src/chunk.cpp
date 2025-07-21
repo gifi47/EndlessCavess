@@ -1269,9 +1269,14 @@ void Chunk::Pair(Chunk& chunk){
 	isRendering = false;
 }
 
-void Chunk::Render(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const{
+void Chunk::RenderMVP(Rendering::Shader& shader, Rendering::Texture& texture, const glm::mat4& MVP) const{
 	if (isRendering)
 		mesh.RenderMVP(shader, texture, MVP);
+}
+
+void Chunk::Render() const{
+	if (isRendering)
+		mesh.Render();
 }
 
 void Chunk::SaveToFile(const std::string& worldDir) const {

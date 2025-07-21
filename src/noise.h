@@ -23,9 +23,11 @@ namespace noise {
 		int height;
 
 		std::vector<std::vector<float> > grid;
+		SimpleNoise() = default;
+		SimpleNoise(int width, int height, unsigned long seed);
 
-		SimpleNoise(int width, int height, long long seed);
-
+		void Smooth();
+		
 		float GetValue(float x, float y);
 
 		template <typename T>
@@ -47,8 +49,8 @@ namespace noise {
 		int depth;
 
 		std::vector<std::vector<std::vector<float> > > grid;
-
-		SimpleNoise3D(int width, int height, int depth, long long seed);
+		SimpleNoise3D() = default;
+		SimpleNoise3D(int width, int height, int depth, unsigned long seed);
 
 		float GetValue(float x, float y, float z);
 
